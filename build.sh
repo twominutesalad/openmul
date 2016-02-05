@@ -150,9 +150,10 @@ function gui {
     sudo apt-get install openjdk-7-jdk
 
     #Install Tomcat
-    sudo wget http://apache.mirror.cdnetworks.com/tomcat/tomcat-8/v8.0.18/bin/apache-tomcat-8.0.18.tar.gz
+    sudo wget http://archive.apache.org/dist/tomcat/tomcat-8/v8.0.24/bin/apache-tomcat-8.0.24.tar.gz
     sudo tar -xvzf apache-tomcat-8*.tar.gz
     sudo mv ./apache-tomcat-8.0*/ /opt/tomcat
+    sudo rm -fr apache-tomcat-8*.tar.gz
 
     sudo JAVA_HOME=/usr/lib/jvm/java-7-openjdk-amd64 CATALINA_HOME=/opt/tomcat /opt/tomcat/bin/./startup.sh 
 
