@@ -464,7 +464,7 @@ char *nbapi_parse_ipv6_nw_addr_to_str(struct flow *flow, struct flow *mask, char
     return ret;
 }
 
-char *nbapi_parse_nw_addr_to_str(struct flow * flow, struct flow * mask, char *s){
+char *nbapi_parse_nw_addr_to_str(struct flow * flow, struct flow * mask, int s){
     char * ret = calloc(sizeof(char), 30);
     struct in_addr in_addr, in_mask;
     int i_mask = 0;
@@ -472,7 +472,7 @@ char *nbapi_parse_nw_addr_to_str(struct flow * flow, struct flow * mask, char *s
     memset(&in_mask, 0, sizeof(in_mask));
     if (!ret) return NULL;
     sprintf(ret, "-1");
-    if(!strncmp(s, "src", strlen(s))) {
+    if(!s) {
         if(!mask->ip.nw_src) return ret;
         in_addr.s_addr = flow->ip.nw_src & mask->ip.nw_src;
         in_mask.s_addr = mask->ip.nw_src;

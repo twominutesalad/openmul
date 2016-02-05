@@ -67,7 +67,7 @@ int delete_static_flow(uint64_t datapath_id, struct flow *fl, struct flow *mask,
 char *nbapi_parse_mac_to_str(uint8_t *mac);
 char *nbapi_fab_parse_nw_addr_to_str(struct flow *flow);
 char *nbapi_parse_ipv6_nw_addr_to_str(struct flow *flow, struct flow *mask, char *s);
-char *nbapi_parse_nw_addr_to_str(struct flow *flow, struct flow *mask, char *s);
+char *nbapi_parse_nw_addr_to_str(struct flow *flow, struct flow *mask, int s);
 
 /* helpers to create arguments */
 uint8_t nbapi_get_switch_version_with_id(uint64_t dpid);
