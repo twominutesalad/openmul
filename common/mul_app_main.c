@@ -21,6 +21,7 @@
  *
  * @see www.openmul.org
  */
+#include "mul_config.h"
 #include "mul_common.h"
 #include "mul_vty.h"
 #include "mul_app_main.h"
@@ -51,6 +52,11 @@ c_atomic_t finish_init;
 
 static void c_app_event_notifier(void *h_arg, void *pkt_arg);
 
+#define MUL_OPT_PIDFILE 0x11000
+#define MUL_OPT_LOGFILE 0x11001
+#define MUL_OPT_REDIRECT 0x11002
+
+static const char *opts = "dhs:V:H:f:NnD:";
 static struct option longopts[] = 
 {
     { "daemon",                 no_argument,       NULL, 'd'},
@@ -58,7 +64,10 @@ static struct option longopts[] =
     { "server-ip",              required_argument, NULL, 's'},
     { "peer-ip",                required_argument, NULL, 'H'},
     { "vty-shell",              required_argument, NULL, 'V'},
-    { "no-init-conf",           required_argument, NULL, 'N'}
+    { "no-init-conf",           required_argument, NULL, 'N'},
+    { "pidfile",                required_argument, NULL, MUL_OPT_PIDFILE},
+    { "logfile",                required_argument, NULL, MUL_OPT_LOGFILE},
+    { "redirect-stdio",         no_argument,       NULL, MUL_OPT_REDIRECT},
 };
 
 #ifdef MUL_APP_V2_MLAPI
@@ -81,15 +90,21 @@ int c_app_infra_vty_init(c_app_hdl_t *hdl);
  * @brief Help information display. 
  */
 static void
-usage(char *progname, int status)
+usage(char *progname, int status, char *extra_usage)
 {
-    printf("%s Options:\n", progname);
-    printf("-d : Daemon Mode\n");
-    printf("-s <server-ip> : Controller server ip address to connect\n");
-    printf("-H <server-ip> : App HA server ip address to connect\n");
-    printf("-V <vty-port> : vty port address. (enables vty shell)\n");
-    printf("-n : Dont connect to controller \n");
-    printf("-h : Help\n");
+    printf("Usage: %s [OPTIONS]\n", progname);
+
+    printf("MUL Common Options\n");
+    printf("\t-d\tDaemon Mode\n");
+    printf("\t-s <server-ip>\tController server ip address to connect\n");
+    printf("\t-H <server-ip>\tApp HA server ip address to connect\n");
+    printf("\t-V <vty-port>\tvty port address. (enables vty shell)\n");
+    printf("\t-n\tDont connect to controller \n");
+    printf("\t--pidfile <file>\tSpecify a pidfile\n");
+    printf("\t--logfile <file>\tSpecify a logfile\n");
+    printf("\t-h\tHelp\n");
+    if (extra_usage)
+	puts(extra_usage);
 
     exit(status);
 }
@@ -478,7 +493,7 @@ mul_app_create_service(char *name,
                        void (*service_handler)(void *service, struct cbuf *msg))
 {
     size_t serv_sz = sizeof(c_app_service_tbl)/sizeof(c_app_service_tbl[0]);
-    int serv_id = 0;
+    unsigned int serv_id = 0;
     struct c_app_service *serv;
 
     for (; serv_id < serv_sz; serv_id++) {
@@ -508,7 +523,7 @@ __mul_app_get_service(char *name,
                       bool retry_conn, const char *server)
 {
     size_t serv_sz = sizeof(c_app_service_tbl)/sizeof(c_app_service_tbl[0]);
-    int serv_id = 0;
+    unsigned int serv_id = 0;
     struct c_app_service *serv_elem;
     mul_service_t *service;
 
@@ -761,6 +776,12 @@ c_app_vty_main(void *arg UNUSED)
 }
 #endif
 
+/* Since we don't require apps to have getopt helpers, we have to cause
+ * something to appear in the modopthelper_sec, to avoid linker errors;
+ * that's what this is.
+ */
+struct mul_getopt_helper_info * __dummy_main_getopt_helper getopthelper_attr = NULL;
+
 static int
 __main(int argc, char **argv)
 {
@@ -773,6 +794,17 @@ __main(int argc, char **argv)
     bool        no_ctrlr = false;
     int         dfl_log_lvl = MUL_APP_LOG_INFO;
     struct in_addr in_addr;
+    int opts_len = 0;
+    char *combined_opts;
+    int longopts_len = 0;
+    struct option *combined_longopts;
+    int rcs = 0, rco = 0, rcu = 0;
+    struct mul_getopt_helper_info *mhi;
+    struct mul_getopt_helper_info **mhip;
+    int extra_usage_len = 0;
+    char *extra_usage;
+    char *log_file = NULL, *pid_file = NULL;
+    int redirect_stdio = 0;
 
     /* Set umask before anything for security */
     umask (0027);
@@ -784,11 +816,72 @@ __main(int argc, char **argv)
     strncat(app_pid_path, c_app_main_hdl.progname, 
             C_APP_PATH_LEN - strlen(app_pid_path) - 1);
 
+    /* Ask modules if they want any extra args */
+    /* Grab the necessary lengths first, then copy the data, then getopt */
+    opts_len = strlen(opts);
+    longopts_len = sizeof(longopts) / sizeof(struct option);
+
+    if (&__start_modopthelper_sec != &__stop_modopthelper_sec) {
+	mhip = &__start_modopthelper_sec;
+	do {
+	    mhi = *mhip;
+
+	    if (!mhi) {
+		++mhip;
+		continue;
+	    }
+
+	    if (mhi->opts)
+		opts_len += strlen(mhi->opts);
+	    if (mhi->longopts_len > 0)
+		longopts_len += mhi->longopts_len;
+	    if (mhi->usage)
+		extra_usage_len += strlen(mhi->usage);
+
+	    ++mhip;
+	} while (mhip < &__stop_modopthelper_sec);
+    }
+
+    combined_opts = malloc(sizeof(char) * (opts_len + 1));
+    rcs += snprintf(combined_opts + rcs,opts_len + 1 - rcs,"%s",opts);
+    combined_longopts = calloc(longopts_len + 1,sizeof(struct option));
+    memcpy(combined_longopts + rco,longopts,sizeof(longopts));
+    rco += sizeof(longopts) / sizeof(struct option);
+    extra_usage = malloc(sizeof(char) * (extra_usage_len + 1));
+    rcu = 0;
+
+    if (__start_modopthelper_sec != __stop_modopthelper_sec) {
+	mhip = &__start_modopthelper_sec;
+	do {
+	    mhi = *mhip;
+
+	    if (!mhi) {
+		++mhip;
+		continue;
+	    }
+
+	    if (mhi->opts)
+		rcs += snprintf(combined_opts + rcs,opts_len + 1 - rcs,
+				"%s",mhi->opts);
+	    if (mhi->longopts_len > 0) {
+		memcpy(combined_longopts + rco,mhi->longopts,
+		       sizeof(struct option) * mhi->longopts_len);
+		rco += mhi->longopts_len;
+	    }
+	    if (mhi->usage)
+		rcu += snprintf(extra_usage + rcu,extra_usage_len + 1 - rcu,
+				"%s",mhi->usage);
+
+	    ++mhip;
+	} while (mhip < &__stop_modopthelper_sec);
+    }
+
     /* Command line option parse. */
     while (1) {
         int opt;
+	int hrc;
 
-        opt = getopt_long (argc, argv, "dhs:V:H:f:NnD:", longopts, 0);
+        opt = getopt_long (argc, argv, combined_opts, combined_longopts, 0);
         if (opt == EOF)
             break;
 
@@ -826,7 +919,7 @@ __main(int argc, char **argv)
             strcpy(c_app_main_hdl.dpid_file, optarg);
             break;
         case 'h':
-            usage(c_app_main_hdl.progname, 0);
+            usage(c_app_main_hdl.progname, 0, extra_usage);
             break;
         case 'N':
             c_app_main_hdl.no_init_conf = 1;
@@ -834,11 +927,47 @@ __main(int argc, char **argv)
         case 'n':
             no_ctrlr = true;         
             break;
+	case MUL_OPT_PIDFILE:
+	    pid_file = strdup(optarg);
+	    break;
+	case MUL_OPT_LOGFILE:
+	    log_file = strdup(optarg);
+	    break;
+	case MUL_OPT_REDIRECT:
+	    redirect_stdio = 1;
+	    break;
         default:
-            usage(c_app_main_hdl.progname, 1);
+	    if (&__start_modopthelper_sec != &__stop_modopthelper_sec) {
+		hrc = -1;
+		mhip = &__start_modopthelper_sec;
+		do {
+		    mhi = *mhip;
+
+		    if (!mhi) {
+			++mhip;
+			continue;
+		    }
+
+		    if (mhi->module_getopt_helper_fn) {
+			hrc = mhi->module_getopt_helper_fn(mhi->priv,opt,optarg);
+			if (hrc == 0)
+			    break;
+		    }
+
+		    ++mhip;
+		} while (mhip < &__stop_modopthelper_sec);
+		if (hrc != 0)
+		    usage(c_app_main_hdl.progname, 1, extra_usage);
+	    }
+	    else
+		usage(c_app_main_hdl.progname, 1, extra_usage);
+
             break;
         }
     }
+
+    if (pid_file)
+	strncpy(app_pid_path, pid_file, C_APP_PATH_LEN - 1);
 
     if (daemon_mode) {
         c_daemon(1, 0, app_pid_path);
@@ -846,13 +975,19 @@ __main(int argc, char **argv)
         c_pid_output(app_pid_path);
     }
 
-    strncpy(log_fname, C_APP_LOG_COMMON_PATH, C_APP_PATH_LEN - 1);
-    strcat(log_fname, c_app_main_hdl.progname);
-    strcat(log_fname, ".log");
+    if (!log_file) {
+	strncpy(log_fname, C_APP_LOG_COMMON_PATH, C_APP_PATH_LEN - 1);
+	strcat(log_fname, c_app_main_hdl.progname);
+	strcat(log_fname, ".log");
+    }
+    else
+	strncpy(log_fname,log_file,C_APP_PATH_LEN - 1);
+
     clog_default = openclog (c_app_main_hdl.progname, CLOG_MUL,
                              LOG_CONS|LOG_NDELAY, LOG_DAEMON);
     clog_set_level(NULL, CLOG_DEST_SYSLOG, LOG_ERR);
     clog_set_level(NULL, CLOG_DEST_STDOUT, LOG_DEBUG);
+    clog_set_redirect_stdio(NULL,redirect_stdio);
     clog_set_file(NULL, log_fname, LOG_DEBUG);
     clog_set_name(NULL, CLOG_MUL, c_app_main_hdl.progname);
 

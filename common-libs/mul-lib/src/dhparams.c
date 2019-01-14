@@ -1,6 +1,7 @@
 #include "dhparams.h"
 #ifndef HEADER_DH_H
 #include <openssl/dh.h>
+#include "openssl1.1_compatibility_layer.h"
 #endif
 DH *get_dh1024(void)
 	{
@@ -23,9 +24,12 @@ DH *get_dh1024(void)
 	DH *dh;
 
 	if ((dh=DH_new()) == NULL) return(NULL);
-	dh->p=BN_bin2bn(dh1024_p,sizeof(dh1024_p),NULL);
-	dh->g=BN_bin2bn(dh1024_g,sizeof(dh1024_g),NULL);
-	if ((dh->p == NULL) || (dh->g == NULL))
+	BIGNUM* p=BN_bin2bn(dh1024_p,sizeof(dh1024_p),NULL);
+	BIGNUM* g=BN_bin2bn(dh1024_g,sizeof(dh1024_g),NULL);
+	DH_set0_pqg(dh, p, NULL, g);
+	BIGNUM *read_p, *read_g;
+	DH_get0_pqg(dh, &read_p, NULL, &read_g);
+	if ((read_p == NULL) || (read_g == NULL))
 		{ DH_free(dh); return(NULL); }
 	return(dh);
 	}
@@ -64,9 +68,12 @@ DH *get_dh2048(void)
 	DH *dh;
 
 	if ((dh=DH_new()) == NULL) return(NULL);
-	dh->p=BN_bin2bn(dh2048_p,sizeof(dh2048_p),NULL);
-	dh->g=BN_bin2bn(dh2048_g,sizeof(dh2048_g),NULL);
-	if ((dh->p == NULL) || (dh->g == NULL))
+	BIGNUM *p=BN_bin2bn(dh2048_p,sizeof(dh2048_p),NULL);
+	BIGNUM *g=BN_bin2bn(dh2048_g,sizeof(dh2048_g),NULL);
+	DH_set0_pqg(dh, p, NULL, g);
+        BIGNUM *read_p, *read_g;
+        DH_get0_pqg(dh, &read_p, NULL, &read_g);
+	if ((read_p == NULL) || (read_g == NULL))
 		{ DH_free(dh); return(NULL); }
 	return(dh);
 	}
@@ -126,9 +133,12 @@ DH *get_dh4096(void)
 	DH *dh;
 
 	if ((dh=DH_new()) == NULL) return(NULL);
-	dh->p=BN_bin2bn(dh4096_p,sizeof(dh4096_p),NULL);
-	dh->g=BN_bin2bn(dh4096_g,sizeof(dh4096_g),NULL);
-	if ((dh->p == NULL) || (dh->g == NULL))
+	BIGNUM *p=BN_bin2bn(dh4096_p,sizeof(dh4096_p),NULL);
+	BIGNUM *g=BN_bin2bn(dh4096_g,sizeof(dh4096_g),NULL);
+	DH_set0_pqg(dh, p, NULL, g);
+        BIGNUM *read_p, *read_g;
+        DH_get0_pqg(dh, &read_p, NULL, &read_g);
+	if ((read_p == NULL) || (read_g == NULL))
 		{ DH_free(dh); return(NULL); }
 	return(dh);
 	}

@@ -19,7 +19,7 @@
 #ifndef __MUL_H__
 #define __MUL_H__
 
-#include "config.h"
+#include "mul_config.h"
 #include "mul_common.h"
 
 #include <openssl/crypto.h>
@@ -32,5 +32,6 @@
 #include "mul_priv.h"
 #include "mul_of.h"
 #include "mul_ha.h"
+#include <getopt.h>
 
 #endif

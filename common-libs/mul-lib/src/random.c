@@ -30,7 +30,7 @@
  * advertising or publicity pertaining to the Software or any
  * derivatives without specific, written prior permission.
  */
-#include "config.h"
+#include "mul_config.h"
 #include <stdio.h>
 #include <stdbool.h>
 #include <errno.h>

@@ -45,7 +45,7 @@ struct mul_port
     uint32_t     state;
     uint8_t      hw_addr[6];
     uint8_t      n_stale;
-#define MUL_PRIV_PORT(X) (x->priv)
+#define MUL_PRIV_PORT(X) (X->priv)
     void         *priv;
 };
 typedef struct mul_port mul_port_t;
@@ -57,7 +57,7 @@ struct mul_app_client_cb
     void (*switch_add_cb)(mul_switch_t *sw); 
     void (*switch_del_cb)(mul_switch_t *sw); 
     int  (*switch_priv_port_alloc)(void **port_ptr);
-    void (*switch_priv_port_free)(void **port_ptr);
+    void (*switch_priv_port_free)(void *port_ptr);
     void (*switch_port_add_cb)(mul_switch_t *sw, mul_port_t *port); 
     void (*switch_port_del_cb)(mul_switch_t *sw, mul_port_t *port); 
     void (*switch_port_chg)(mul_switch_t *sw, mul_port_t *port, bool adm, 

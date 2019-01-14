@@ -1,0 +1,15 @@
+build-ubuntu16:
+  image: gitlab.flux.utah.edu:4567/tcloud/capnet:ubuntu16
+  script:
+  - ./autogen.sh
+  - touch application/nbapi/c-swig/mul_nbapi_flow.h
+  - mkdir build install
+  - cd build
+  - ../configure --prefix=`readlink -f ../install`
+  - make
+  - make install
+  artifacts:
+    paths:
+    - install/
+  only:
+  - capnet

@@ -1,5 +1,7 @@
 %module mul_nbapi
 
+%include "stdint.i"
+
 %{
 #define SWIG_FILE_WITH_INIT
 #include "mul_common.h"
@@ -23,8 +25,6 @@ int nbapi_init(int argc, char **argv);
 %init %{
     nbapi_worker_entry();
 %}
-
-%include "stdint.i"
 
 %include "openflow-common.h"
 %include "openflow-10.h"

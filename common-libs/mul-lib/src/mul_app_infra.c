@@ -532,6 +532,9 @@ c_app_switch_add(c_app_hdl_t *hdl, c_ofp_switch_add_t *cofp_sa)
         port->owner = sw;
         memcpy(port->hw_addr, opp->hw_addr, OFP_ETH_ALEN);
         // c_app_switch_get(sw);
+        if (app_cbs && app_cbs->switch_priv_port_alloc) {
+            app_cbs->switch_priv_port_alloc(&port->priv);
+        }
         __mul_app_switch_port_add(sw, port);
         if (app_cbs && app_cbs->switch_port_add_cb) {
             app_cbs->switch_port_add_cb(sw, port);
@@ -636,6 +639,10 @@ c_switch_port_status(c_app_hdl_t *hdl UNUSED,
         }
 
         if (ofp_psts->reason == OFPPR_ADD) { 
+	    if (!port_exists &&
+		app_cbs && app_cbs->switch_priv_port_alloc) {
+		app_cbs->switch_priv_port_alloc(&port->priv);
+	    }
             if (!port_exists && 
                 app_cbs && app_cbs->switch_port_add_cb) {
                 app_cbs->switch_port_add_cb(sw, port);

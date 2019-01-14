@@ -7438,11 +7438,11 @@ of131_flow_normalize(struct flow *fl, struct flow *mask)
             mask->tp_dst ||
             mask->tp_src) {
             ret = 1;
-            memset(&mask->ipv6, 0, sizeof(&mask->ipv6));
+            memset(&mask->ipv6, 0, sizeof(mask->ipv6));
             mask->nw_proto = 0; 
             mask->tp_dst = 0; 
             mask->tp_src = 0;
-            memset(&fl->ipv6, 0, sizeof(&fl->ipv6));
+            memset(&fl->ipv6, 0, sizeof(fl->ipv6));
             fl->nw_proto = 0; 
             fl->tp_dst = 0; 
             fl->tp_src = 0;
@@ -7452,16 +7452,13 @@ of131_flow_normalize(struct flow *fl, struct flow *mask)
 
     if (mask->dl_type && 
         (fl->dl_type == htons(ETH_TYPE_ARP))) {
-        if(mask->nw_proto ||
-           mask->nw_tos ||
+        if(mask->nw_tos ||
            mask->tp_src ||
            mask->tp_dst) {
            ret = 1;
-           mask->nw_proto = 0;
            mask->nw_tos = 0; 
            mask->tp_src = 0; 
            mask->tp_dst = 0;
-           fl->nw_proto = 0;
            fl->nw_tos = 0; 
            fl->tp_src = 0; 
            fl->tp_dst = 0;

@@ -59,6 +59,7 @@ struct clog
   			   priority of the message? */
   int syslog_options;	/* 2nd arg to openlog */
   int timestamp_precision;	/* # of digits of subsecond precision */
+  int redirect_stdio;
 };
 
 /* Message structure. */
@@ -117,6 +118,7 @@ extern void clog_set_name (struct clog *zl, clog_proto_t protocol, char *name);
 
 /* Set logging to the given filename at the specified level. */
 extern int clog_set_file (struct clog *zl, const char *filename, int log_level);
+extern int clog_set_redirect_stdio (struct clog *zl, int redirect);
 /* Disable file logging. */
 extern int clog_reset_file (struct clog *zl);
 

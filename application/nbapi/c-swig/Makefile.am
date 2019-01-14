@@ -50,12 +50,12 @@ _mul_nbapi_la_SOURCES = mul_nbapi_wrap.c $(SWIG_SOURCES) \
 LD_FLAGS= @LDFLAGS@ 
 
 _mul_nbapi_la_LIBADD = \
-		$(top_srcdir)/common-libs/mul-lib/.libs/libmulutil.la  \
-		$(top_srcdir)/services/loadable/topo_routing/./.libs/libmultr.la \
-		$(top_srcdir)/common-libs/util-linux/libuuid/.libs/libuuid.la \
-		$(top_srcdir)/mul/./.libs/libmul.la $(top_srcdir)/application/makdi/libmakdi.la \
-		$(top_srcdir)/application/fabric/libfab.la	\
-		$(top_srcdir)/common-libs/3rd-party/quagga-lib/.libs/libcli.la \
+		$(top_builddir)/common-libs/mul-lib/.libs/libmulutil.la  \
+		$(top_builddir)/services/loadable/topo_routing/./.libs/libmultr.la \
+		$(top_builddir)/common-libs/util-linux/libuuid/.libs/libuuid.la \
+		$(top_builddir)/mul/./.libs/libmul.la $(top_builddir)/application/makdi/libmakdi.la \
+		$(top_builddir)/application/fabric/libfab.la	\
+		$(top_builddir)/common-libs/3rd-party/quagga-lib/.libs/libcli.la \
 		-levent -lcrypt -lcrypto -lrt -lssl
 
 _mul_nbapi_la_LDFLAGS = $(LD_FLAGS) -module -lpthread -lglib-2.0 -lcurl
@@ -64,6 +64,10 @@ if !HAVE_EXT_GLIB
 LD_FLAGS += -Wl,-rpath=$(LIB_GLIB) -L$(LIB_GLIB)
 INCLUDES += -I$(GLIB_INCLUDE) -I$(GLIB_INCLUDE)/../
 _mul_nbapi_la_LIBADD  += $(LIB_GLIB)/libglib-2.0.la
+else
+LD_FLAGS += $(LIB_GLIB)
+INCLUDES += $(GLIB_INCLUDE)
+_mul_nbapi_la_LIBADD  += $(LIB_GLIB)
 endif
 
 if !HAVE_EXT_LIBEVENT
@@ -73,7 +77,7 @@ endif
 
 mul_nbapi_wrap.c : $(SWIG_SOURCES) $(SWIG_DEPEND)
 		$(SWIG) $(AX_SWIG_PYTHON_OPT) $(INCLUDES) -o $@ $<
-		./nbapi_autocopy.py
+		cd $(srcdir) && ./nbapi_autocopy.py && cd $(builddir)
 
 noinst_HEADERS = mul_nbapi.h mul_nbapi_common.h
 

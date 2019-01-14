@@ -1,6 +1,7 @@
-INCLUDES =  -I./include -I$(top_srcdir)/common \
+INCLUDES =  -I$(srcdir)/include -I$(top_srcdir)/common \
             -I$(top_srcdir)/common-libs/3rd-party/quagga-lib/include \
-            -I$(top_srcdir)/common-libs/util-linux/libuuid/src/
+            -I$(top_srcdir)/common-libs/util-linux/libuuid/src/ $(GLIB_INCLUDE)
+LIBS = $(LIB_GLIB)
 
 DEFS = @DEFS@ -DSYSCONFDIR=\"$(sysconfdir)/\"
 
@@ -20,17 +21,22 @@ libmulutil_la_SOURCES = \
     ./src/dhparams.c ./src/fsync.c ./src/tuntap.c ./src/mul_patricia.c \
     ./src/nbq.c
 
+sharedir = $(prefix)/share/openmul
+share_DATA = $(top_srcdir)/common/mul_app_main.c
+
 pkginclude_HEADERS = \
+    $(top_builddir)/common/mul_config.h \
     ./include/atomic.h  ./include/cbuf.h  ./include/compiler.h  \
     ./include/c_util.h  ./include/idx_pool.h  ./include/lock.h \
-    ./include/clog.h ./include/rlim.h ./include/hash.h ./include/secure_io.h \
+    ./include/clog.h ./include/rlim.h ./include/hash.h ./include/dhparams.h ./include/secure_io.h \
     ./include/igmp.h ./include/mul_app_infra.h  ./include/mul_app_interface.h\
      ./include/mul_app_main.h  ./include/mul_common.h  \
     ./include/mul_of_msg.h  ./include/mul_packet.h  ./include/mul_services.h \
     ./include/packets.h  ./include/random.h ./include/mul_route.h \
     ./include/mul_route_apsp.h ./include/mul_tr_servlet.h \
-    ./include/mul_servlet.h ./include/mul_fabric_servlet.h \
+    ./include/mul_servlet.h ./include/mul_fabric_servlet.h ./include/mul_conx_servlet.h \
     ./include/openflow-131.h ./include/openflow-10.h \
     ./include/openflow-140.h \
     ./include/openflow-common.h ./include/xtoxll.h ./include/mul_vty.h \
-    ./include/fsync.h ./include/tuntap.h ./include/mul_patricia.h ./include/nbq.h
+    ./include/fsync.h ./include/tuntap.h ./include/mul_patricia.h ./include/nbq.h \
+    ./include/openssl1.0_compatibility_layer.h

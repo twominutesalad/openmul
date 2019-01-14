@@ -19,7 +19,7 @@
 #ifndef __MUL_FABRIC_COMMON_H__
 #define __MUL_FABRIC_COMMON_H__
 
-#include "config.h"
+#include "mul_config.h"
 #include "mul_common.h"
 #include "mul_vty.h"
 #include "mul_fabric.h"

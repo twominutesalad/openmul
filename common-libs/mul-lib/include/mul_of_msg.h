@@ -231,7 +231,7 @@ struct mul_act_mdata
 };
 typedef struct mul_act_mdata mul_act_mdata_t;
 
-static void inline
+static inline void
 of_mact_mdata_reset(mul_act_mdata_t *mdata)
 {
     mdata->act_wr_ptr = mdata->act_base;
@@ -248,14 +248,14 @@ of_mact_mdata_reset(mul_act_mdata_t *mdata)
     memset(mdata->setf_bm, 0, sizeof(mdata->setf_bm));
 }
 
-static void inline
+static inline void
 of_mact_mdata_init(mul_act_mdata_t *mdata, size_t len)
 {
     of_mact_mdata_reset(mdata);
     mdata->buf_len = len;
 }
 
-static void inline
+static inline void
 of_mact_mdata_reset_act_wr_inst(mul_act_mdata_t *mdata)
 {
     mdata->act_inst_wr_ptr = NULL;

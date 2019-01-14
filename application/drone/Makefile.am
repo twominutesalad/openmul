@@ -31,6 +31,9 @@ LD_FLAGS= @LDFLAGS@
 if !HAVE_EXT_GLIB
 LD_FLAGS += -Wl,-rpath=$(LIB_GLIB) -L$(LIB_GLIB)
 INCLUDES += -I$(GLIB_INCLUDE) -I$(GLIB_INCLUDE)/../
+else
+LD_FLAGS += $(LIB_GLIB)
+INCLUDES += $(GLIB_INCLUDE)
 endif
 
 if !HAVE_EXT_LIBEVENT
@@ -39,13 +42,13 @@ INCLUDES += -I$(LIBEVENT_INCLUDE)
 endif
 
 muldrone_LDADD = \
-                $(top_srcdir)/mul/.libs/libmul.a  \
-                $(top_srcdir)/common-libs/mul-lib/.libs/libmulutil.a  \
-                $(top_srcdir)/services/loadable/topo_routing/./.libs/libmultr.a -lrt \
+                $(top_builddir)/mul/.libs/libmul.a  \
+                $(top_builddir)/common-libs/mul-lib/.libs/libmulutil.a  \
+                $(top_builddir)/services/loadable/topo_routing/./.libs/libmultr.a -lrt \
                 -lcrypto -lssl -lglib-2.0
 
 if HAVE_MUL_VTY
-muldrone_LDADD += $(top_srcdir)/common-libs/3rd-party/quagga-lib/.libs/libcli.a
+muldrone_LDADD += $(top_builddir)/common-libs/3rd-party/quagga-lib/.libs/libcli.a
 endif
 
 muldrone_LDFLAGS = $(LD_FLAGS) -lpthread -levent -lcrypt 

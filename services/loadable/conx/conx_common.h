@@ -19,7 +19,7 @@
 #ifndef __CONX_COMMON_H__
 #define __CONX_COMMON_H__
 
-#include "config.h"
+#include "mul_config.h"
 #include "mul_common.h"
 #include "mul_vty.h"
 #include "mul_app_main.h"

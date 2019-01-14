@@ -24,7 +24,7 @@ Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
 #define HAVE_IPV6 1
 
 #ifdef HAVE_CONFIG_H
-#include "config.h"
+#include "mul_config.h"
 #endif /* HAVE_CONFIG_H */
 
 #ifdef SUNOS_5

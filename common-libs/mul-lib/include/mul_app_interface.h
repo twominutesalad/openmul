@@ -31,6 +31,24 @@ extern initcall_t __start_modvtyinit_sec, __stop_modvtyinit_sec;
 #define module_vty_init(x)  initcall_t _##x vty_attr = x
 #endif
 
+typedef int (*module_getopt_helper_t)(void *priv,int opt,char *optarg);
+
+struct mul_getopt_helper_info {
+    initcall_t module_init_fn;
+    module_getopt_helper_t module_getopt_helper_fn;
+    void *priv;
+    char *opts;
+    struct option *longopts;
+    size_t longopts_len;
+    char *usage;
+};
+
+extern struct mul_getopt_helper_info *__start_modopthelper_sec;
+extern struct mul_getopt_helper_info *__stop_modopthelper_sec;
+#define getopthelper_attr         __attribute__ ((section ("modopthelper_sec")))
+#define module_getopt_helper(x)					\
+    struct mul_getopt_helper_info * _##x getopthelper_attr = &(x)
+
 /* Registered application names */
 #define HELLO_APP_NAME "mul-hello"
 #define FAB_APP_NAME "mul-fabric"

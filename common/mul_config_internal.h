@@ -1,0 +1,8 @@
+#define PACKAGE "openmul"
+#define PACKAGE_BUGREPORT "http://www.openmul.org"
+#define PACKAGE_NAME "OpenMUL"
+#define PACKAGE_STRING "OpenMUL 5.0.1"
+#define PACKAGE_TARNAME "openmul"
+#define PACKAGE_URL ""
+#define PACKAGE_VERSION "5.0.1"
+#define VERSION "5.0.1"

@@ -16,7 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  *
  */
-#include "config.h"
+#include "mul_config.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -724,6 +724,23 @@ clog_set_file (struct clog *zl, const char *filename, int log_level)
   zl->fp = fp;
   logfile_fd = fileno(fp);
 
+  if (zl->redirect_stdio) {
+    dup2(logfile_fd,1);
+    dup2(logfile_fd,2);
+  }
+
+  return 1;
+}
+
+int
+clog_set_redirect_stdio (struct clog *zl, int redirect)
+{
+  /* Set default zl. */
+  if (zl == NULL)
+    zl = clog_default;
+
+  zl->redirect_stdio = redirect;
+
   return 1;
 }
 
@@ -780,6 +797,11 @@ clog_rotate (struct clog *zl)
         }	
       logfile_fd = fileno(zl->fp);
       zl->maxlvl[CLOG_DEST_FILE] = level;
+
+      if (zl->redirect_stdio) {
+	dup2(logfile_fd,1);
+	dup2(logfile_fd,2);
+      }
     }
 
   return 1;

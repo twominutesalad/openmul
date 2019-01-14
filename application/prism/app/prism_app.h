@@ -19,7 +19,7 @@
 #ifndef __PRISM_APP_H__
 #define __PRISM_APP_H__
 
-#include "config.h"
+#include "mul_config.h"
 #include "mul_common.h"
 #include "mul_vty.h"
 #include "mul_conx_servlet.h"

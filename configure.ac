@@ -8,7 +8,7 @@ AC_CONFIG_SRCDIR(common/mul_app_main.c)
 AC_CONFIG_MACRO_DIR([m4])
 
 AM_INIT_AUTOMAKE
-AM_CONFIG_HEADER(common/config.h)
+AM_CONFIG_HEADER(common/mul_config.h)
 
 AC_PROG_CC
 AM_PROG_CC_C_O
@@ -31,7 +31,7 @@ dnl -------
 AC_PROG_LIBTOOL
 AM_PATH_PYTHON(2.7)
 AX_PKG_SWIG(1.3.17, [], [AC_MSG_ERROR([SWIG is required to build..])])
-AX_SWIG_ENABLE_CXX
+#AX_SWIG_ENABLE_CXX
 AX_SWIG_PYTHON
 
 AC_HEADER_STDBOOL
@@ -81,6 +81,7 @@ else
 fi
 
 save_LIBS="$LIBS"
+save_CFLAGS="$CFLAGS"
 LIBS=""
 AC_ARG_WITH(glib,
 [  --with-glib             Set glib path])
@@ -95,8 +96,10 @@ if test "x$with_glib" != "x" ; then
   fi
   have_glib=no
 else
-  LIB_GLIB=
-  GLIB_INCLUDE=
+  LIB_GLIB=`pkg-config --libs glib-2.0`
+  GLIB_INCLUDE=`pkg-config --cflags glib-2.0`
+  LIBS="${LIB_GLIB} $LIBS"
+  CFLAGS="${GLIB_INCLUDE} $CFLAGS"
   AC_SEARCH_LIBS([g_get_monotonic_time], [glib-2.0],
                  [have_glib=yes], 
                  [AC_MSG_ERROR([glib is not installed])])
@@ -104,6 +107,7 @@ else
                  [AC_MSG_ERROR([glib header file not found])])                  
 fi
 LIBS="$save_LIBS"
+CFLAGS="$save_CFLAGS"
 
 AM_CONDITIONAL(HAVE_EXT_GLIB, test "$have_glib" = yes)
 AC_SUBST([LIB_GLIB])
@@ -170,6 +174,11 @@ AM_CONDITIONAL([HAVE_DOXYGEN],
 [test -n "$DOXYGEN"])AM_COND_IF([HAVE_DOXYGEN], [AC_CONFIG_FILES([docs/Doxyfile])])
 
 AM_SILENT_RULES([yes])
+
+AC_CONFIG_COMMANDS([privconfigh],
+	[egrep 'define (PACKAGE|VERSION)' common/mul_config.h > common/mul_config_internal.h
+	 egrep -v 'define (PACKAGE|VERSION)' common/mul_config.h > common/mul_config.h.tmp
+	 mv common/mul_config.h.tmp common/mul_config.h],[])
 
 AC_CONFIG_FILES([Makefile mul/Makefile application/l2switch/Makefile \
         application/hello/Makefile docs/Makefile \

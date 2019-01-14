@@ -21,6 +21,9 @@
 
 char c_path_name[C_MAX_PATH_NAME_LEN+1];
 
+#define MUL_OPT_PIDFILE 0x11000
+#define MUL_OPT_LOGFILE 0x11001
+
 /* of-controller options. */
 static struct option longopts[] = 
 {
@@ -39,10 +42,13 @@ static struct option longopts[] =
     { "bench-enable",           no_argument,       NULL, 'b'},
     { "highest-of-ver",         required_argument, NULL, 'O'},
     { "no-strict-validation",   no_argument,       NULL, 'N'},
+    { "pidfile",                required_argument, NULL, MUL_OPT_PIDFILE},
+    { "logfile",                required_argument, NULL, MUL_OPT_LOGFILE},
 };
 
 /* Process ID saved for use by init system */
-const char *pid_file = C_PID_PATH;
+char *pid_file = C_PID_PATH;
+char *log_file = "/var/log/mul.log";
 
 /* handle to controller to pass around */
 ctrl_hdl_t ctrl_hdl;
@@ -69,6 +75,8 @@ usage(char *progname, int status)
     printf("-b        : Enable Benchmark(Disables initial handshake queries)\n"); 
     printf("-O <ver>  : Highest advertised OF version- 5:OF1.4 4:OF1.3\n");
     printf("--no-strict-validation: Disable strict OF validations\n");
+    printf("--pidfile <file>: Specify a pidfile (default /var/run/mul.pid)\n");
+    printf("--logfile <file>: Specify a logfile (default /var/log/mul.log)\n");
     printf("-h        : Help\n");
 
     exit(status);
@@ -233,6 +241,12 @@ main(int argc, char **argv)
         case 'N':
             no_strict = 1;
             break;
+	case MUL_OPT_PIDFILE:
+	    pid_file = strdup(optarg);
+	    break;
+	case MUL_OPT_LOGFILE:
+	    log_file = strdup(optarg);
+	    break;
         default:
             usage(progname, 1);
             break;
@@ -247,10 +261,10 @@ main(int argc, char **argv)
     strcat(c_path_name, "/rsys");
 
     if (daemon_mode) {
-        c_daemon(0, 0, unlock? NULL:C_PID_PATH);
+        c_daemon(0, 0, unlock? NULL:pid_file);
     } else {
         if (!unlock) {
-            c_pid_output(C_PID_PATH);
+            c_pid_output(pid_file);
         }
     }
 
@@ -258,7 +272,7 @@ main(int argc, char **argv)
                              LOG_CONS|LOG_NDELAY, LOG_DAEMON);
     clog_set_level(NULL, CLOG_DEST_SYSLOG, dfl_log);
     clog_set_level(NULL, CLOG_DEST_STDOUT, dfl_log);
-    clog_set_file(NULL, "/var/log/mul.log", dfl_log);
+    clog_set_file(NULL, log_file, dfl_log);
 
     if(geteuid() != 0) {
         c_log_err("!! Run as root !!");
